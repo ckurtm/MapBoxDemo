@@ -7,6 +7,7 @@ import android.os.SystemClock
 import androidx.lifecycle.Lifecycle
 import androidx.test.core.app.ActivityScenario
 import androidx.test.espresso.Espresso.onView
+import androidx.test.espresso.IdlingRegistry
 import androidx.test.espresso.action.ViewActions
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.assertion.ViewAssertions.matches
@@ -18,8 +19,11 @@ import androidx.test.rule.GrantPermissionRule
 import app.wimt.cheese.Constants
 
 import app.wimt.cheese.service.CheesyService
+import app.wimt.cheese.testing.EspressoIdlingResource
 import com.example.tes.R
 import junit.framework.Assert.assertTrue
+import org.junit.After
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -31,6 +35,16 @@ class HomeScreenTest {
 
     @get:Rule
     var permissionRule: GrantPermissionRule = GrantPermissionRule.grant(android.Manifest.permission.ACCESS_FINE_LOCATION)
+
+    @Before
+    fun registerIdlingResource(){
+        IdlingRegistry.getInstance().register(EspressoIdlingResource.idlingResource)
+    }
+
+    @After
+    fun deregisterIdlingResource(){
+        IdlingRegistry.getInstance().unregister(EspressoIdlingResource.idlingResource)
+    }
 
     @Test
     fun map_IsDisplayed_whenAppLaunched() {
@@ -54,7 +68,6 @@ class HomeScreenTest {
     @Test
     fun addMarkersDialogIsShown_onLongPress() {
          ActivityScenario.launch(HomeScreen::class.java)
-        SystemClock.sleep(1500)
         onView(withId(R.id.map)).perform(ViewActions.longClick())
         onView(withId(R.id.noteText)).check(matches(isDisplayed()))
     }
@@ -62,16 +75,14 @@ class HomeScreenTest {
     @Test
     fun addedCheese_isShown_OnMap() {
         val activityScenario: ActivityScenario<*>  = ActivityScenario.launch(HomeScreen::class.java)
-        SystemClock.sleep(1000)
         onView(withId(R.id.map))
             .perform(ViewActions.swipeUp())
         addMarker("cheese text marker 1")
         onView(withId(R.id.map)).perform(ViewActions.swipeDown())
         addMarker("other marker")
-        SystemClock.sleep(2000)
         activityScenario.onActivity {
             val markers = (it as HomeScreen).markers
-            assertTrue(markers.size > 2)
+            assertTrue(markers.isNotEmpty())
         }
     }
 
@@ -86,11 +97,9 @@ class HomeScreenTest {
         activityScenario.onActivity {
             it.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
         }
-        SystemClock.sleep(2000)
         activityScenario.onActivity {
             it.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
         }
-        SystemClock.sleep(2000)
         activityScenario.onActivity {
             val markers = (it as HomeScreen).markers
             assertTrue(markers.size == 2)
