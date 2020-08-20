@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="PinView">
+        <attr name="pinColor" format="color|reference"/>
+        <attr name="pinStrokeColor" format="color|reference"/>
+        <attr name="pinPulseColor" format="color|reference" />
+    </declare-styleable>
+</resources>
